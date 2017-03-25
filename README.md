@@ -1,4 +1,5 @@
 # Variational Autoencoder
+## Setting
 - Tensorflow 0.11
 - MNIST Dataset
 - Run `main.py` to train model
