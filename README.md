@@ -1,4 +1,5 @@
 # Variational Autoencoder
+Implement [VAE](https://arxiv.org/pdf/1312.6114.pdf) 
 ## Setting
 - Tensorflow 0.11
 - MNIST Dataset
@@ -8,7 +9,7 @@
 ## Result
 - z_dim = 2
 - Test on 5000 examples of MNIST Test Dataset
-- epche = 100, minibatch = 100
+- epoch = 100, minibatch = 100
 
 
 
