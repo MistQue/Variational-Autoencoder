@@ -28,7 +28,7 @@ class Model(object):
         self.x = tf.placeholder(tf.float32, [None, self.input_dim])
         self.batch_size = tf.shape(self.x)[0]
         
-        # encode and decode
+        # encode
         mu, log_sigma = self.encoder.set_model(self.x, is_training = True)
 
 
@@ -36,9 +36,9 @@ class Model(object):
         
         eps = tf.random_normal([self.batch_size, self.z_dim])
         z = eps * tf.exp(log_sigma) + mu
+        
+        # decodem, clip the value to avoid log to nan
         gen_data = self.decoder.set_model(z, is_training = True)
-        
-        
         gen_data_clip = tf.clip_by_value(gen_data, 1e-7, 1 - 1e-7)                     
         reconstruct_error = tf.reduce_mean(-tf.reduce_sum(self.x * tf.log(gen_data_clip) + 
                                                         (1 - self.x) * tf.log(1 - gen_data_clip), 1))
