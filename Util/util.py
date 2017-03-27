@@ -4,9 +4,8 @@ import os
 import sys
 
 import tensorflow as tf
-import cv2
 import numpy as np
-
+from math import *
 
 
 def xavier_init(fan_in, fan_out, constant=1): 
@@ -26,16 +25,15 @@ def get_biases(name, shape, value, trainable = True):
     return tf.get_variable('biases{}'.format(name), shape,
                            initializer = tf.constant_initializer(value),
                            trainable = trainable)
-
+						   
+def lrelu(x, leak=0.2, name="lrelu"):
+  return tf.maximum(x, leak*x)
+  
 def get_dim(target):
     dim = 1
     for d in target.get_shape()[1:].as_list():
         dim *= d
     return dim
-
-
-def lrelu(x, leak=0.2, name="lrelu"):
-  return tf.maximum(x, leak*x)
 
 def linear_layer(x, in_dim, out_dim, l_id):
     weights = get_weights(l_id, [in_dim, out_dim], 1.0/np.sqrt(float(in_dim)))
@@ -68,3 +66,28 @@ def deconv_layer(inputs, out_shape, filter_width, filter_hight, stride, l_id):
     deconved = tf.nn.conv2d_transpose(inputs, weights, output_shape = out_shape,
                                       strides=[1, stride,  stride,  1])
     return tf.nn.bias_add(deconved, biases)
+
+def sampler(batchsize, z_dim, batch_indices, n_class):
+    if z_dim % 2 != 0:
+        raise Exception("z_dim must be a multiple of 2.")
+
+    def sample(x, y, label, n_class):
+        shift = 1.4
+        r = 2.0 * np.pi / float(n_class) * float(label)
+        new_x = x * cos(r) - y * sin(r)
+        new_y = x * sin(r) + y * cos(r)
+        new_x += shift * cos(r)
+        new_y += shift * sin(r)
+        x = np.array([new_x, new_y])
+        return x.reshape((2,))
+
+    x_var = 0.5
+    y_var = 0.05
+    x = np.random.normal(0, x_var, (batchsize, z_dim / 2))
+    y = np.random.normal(0, y_var, (batchsize, z_dim / 2))
+    z = np.empty((batchsize, z_dim), dtype=np.float32)
+    
+    for batch in xrange(batchsize):
+        for zi in xrange(z_dim / 2):
+            z[batch, zi*2:zi*2+2] = sample(x[batch, zi], y[batch, zi], batch_indices[batch], n_class)
+    return z
